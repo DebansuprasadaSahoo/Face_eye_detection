@@ -9,8 +9,8 @@ eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.
 # Streamlit app title
 st.title('Real-Time Face and Eye Detection')
 
-# Initialize webcam
-cap = cv2.VideoCapture(0)
+# Initialize webcam (try different camera index if needed)
+cap = cv2.VideoCapture(0)  # Change to 1, 2, etc. for other cameras
 
 # Function to detect faces and eyes in a given image
 def detect_faces_and_eyes(img):
@@ -48,3 +48,7 @@ while True:
 
 # Release the camera
 cap.release()
+
+# Print a message if camera access is denied
+if not ret:
+    print("Error: Unable to open camera. Please check permissions or camera availability.")
