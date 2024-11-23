@@ -52,14 +52,9 @@ if col2.button('Capture Image'):
     else:
         st.warning("Please take a picture using the camera.")
 
-# Reset button
-if col2.button('Reset'):
-    st.experimental_rerun()  # This will reload the app and reset everything
-
 # Add some instructions
 st.write("""
     **Instructions**:
     1. Use the camera input above to capture your image.
     2. Press the 'Capture Image' button to perform face and eye detection.
-    3. Press 'Reset' to start over.
 """)
