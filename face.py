@@ -6,27 +6,8 @@ import numpy as np
 face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
-# Streamlit app title and background image
-st.set_page_config(page_title="Face and Eye Detection", layout="wide")
+# Streamlit app title
 st.title('Real-Time Face and Eye Detection')
-
-# Set a background image (you can upload an image in your project directory or provide an online URL)
-bg_image = "https://via.placeholder.com/800x600.png"  # Replace with your own image URL or file path
-st.markdown(
-    f"""
-    <style>
-    .stApp {{
-        background-image: url("{bg_image}");
-        background-size: cover;
-        background-position: center center;
-        background-repeat: no-repeat;
-        height: 100vh;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-    }}
-    </style>
-    """, unsafe_allow_html=True)
 
 # Function to detect faces and eyes in a given image
 def detect_faces_and_eyes(img):
@@ -48,12 +29,14 @@ def detect_faces_and_eyes(img):
             # Draw rectangle around eyes
             cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
 
-# Create a button to start or reset the camera
-if st.button('Start Camera'):
-    # Camera input using Streamlit
-    camera_input = st.camera_input("Capture Image")
+# Streamlit UI with buttons
+col1, col2 = st.columns([2, 1])
 
-    # If a picture is taken
+# Camera input using Streamlit
+camera_input = st.camera_input("Capture Image")
+
+# Capture button
+if col2.button('Capture Image'):
     if camera_input:
         # Read the image
         img = cv2.imdecode(np.frombuffer(camera_input.getvalue(), np.uint8), 1)
@@ -64,16 +47,19 @@ if st.button('Start Camera'):
         # Convert image for display in Streamlit
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-        # Show the processed image with detection
+        # Show the processed image
         st.image(img_rgb, channels="RGB", caption="Captured Image with Face and Eye Detection")
+    else:
+        st.warning("Please take a picture using the camera.")
 
-        # Add some instructions
-        st.write("""
-            **Instructions**:
-            1. Use the camera input above to capture your image.
-            2. Once the image is captured, face and eye detection will be performed.
-        """)
+# Reset button
+if col2.button('Reset'):
+    st.experimental_rerun()  # This will reload the app and reset everything
 
-elif st.button('Refresh'):
-    # Reset the app for a new capture
-    st.experimental_rerun()
+# Add some instructions
+st.write("""
+    **Instructions**:
+    1. Use the camera input above to capture your image.
+    2. Press the 'Capture Image' button to perform face and eye detection.
+    3. Press 'Reset' to start over.
+""")
