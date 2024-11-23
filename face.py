@@ -2,53 +2,53 @@ import cv2
 import streamlit as st
 import numpy as np
 
-# Load Haar cascades
+# Load Haar cascades for face and eye detection
 face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
 eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
 # Streamlit app title
 st.title('Real-Time Face and Eye Detection')
 
-# Initialize webcam (try different camera index if needed)
-cap = cv2.VideoCapture(0)  # Change to 1, 2, etc. for other cameras
-
 # Function to detect faces and eyes in a given image
 def detect_faces_and_eyes(img):
     gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
+    # Detect faces
     faces = face_classifier.detectMultiScale(gray, 1.1, 4)
     for (x, y, w, h) in faces:
-        cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
-        roi_gray = gray[y:y+h, x:x+w]
-        roi_color = img[y:y+h, x:x+w]
+        # Draw rectangle around face
+        cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
+        
+        # Region of interest (ROI) for eyes within the detected face
+        roi_gray = gray[y:y + h, x:x + w]
+        roi_color = img[y:y + h, x:x + w]
+        
+        # Detect eyes
         eyes = eye_classifier.detectMultiScale(roi_gray)
         for (ex, ey, ew, eh) in eyes:
-            cv2.rectangle(roi_color, (ex, ey), (ex+ew, ey+eh), (0, 255, 0), 2)
+            # Draw rectangle around eyes
+            cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
 
-# Streamlit UI
-frame_placeholder = st.empty()
-capture_button = st.button('Capture Image')
+# Camera input using Streamlit
+camera_input = st.camera_input("Capture Image")
 
-while True:
-    ret, frame = cap.read()
-    if not ret:
-        break
+# If a picture is taken
+if camera_input:
+    # Read the image
+    img = cv2.imdecode(np.frombuffer(camera_input.getvalue(), np.uint8), 1)
 
-    # Detect faces and eyes
-    detect_faces_and_eyes(frame)
+    # Perform face and eye detection
+    detect_faces_and_eyes(img)
 
-    # Display the frame
-    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-    frame_placeholder.image(frame_rgb, channels='RGB')
+    # Convert image for display in Streamlit
+    img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
 
-    if capture_button:
-        # Capture the current frame and display it
-        st.image(frame_rgb, channels='RGB')
-        break
+    # Show the processed image
+    st.image(img_rgb, channels="RGB", caption="Captured Image with Face and Eye Detection")
 
-# Release the camera
-cap.release()
-
-# Print a message if camera access is denied
-if not ret:
-    print("Error: Unable to open camera. Please check permissions or camera availability.")
+# Add some instructions
+st.write("""
+    **Instructions**:
+    1. Use the camera input above to capture your image.
+    2. Once the image is captured, face and eye detection will be performed.
+""")
