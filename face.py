@@ -7,7 +7,7 @@ import numpy as np
 st.title("Real-Time Face and Eye Detection")
 st.markdown("This application detects faces and eyes in real-time using your webcam.")
 
-# Haar cascade classifiers
+# Load Haar cascades
 face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
 eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
 
@@ -47,7 +47,6 @@ capture_button = st.button('Capture Image')
 
 # If the button is clicked, capture and display the image
 if capture_button:
-    # Access the frame from the webrtc stream
     transformer = webrtc_streamer.video_transformer
     if transformer and transformer.frame is not None:
         img = transformer.frame
