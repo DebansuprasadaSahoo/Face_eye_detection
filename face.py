@@ -14,10 +14,10 @@ eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.
 # Class for video stream processing
 class FaceEyeDetection(VideoTransformerBase):
     def __init__(self):
-        self.frame = None
+        self.frame = None  # Store the current frame
     
     def transform(self, frame):
-        # Save the current frame for later use
+        # Store the current frame
         self.frame = frame.to_ndarray(format="bgr24")
         
         img = self.frame
@@ -45,14 +45,16 @@ webrtc_streamer(key="face-eye-detection", video_transformer_factory=FaceEyeDetec
 # Button to capture image
 capture_button = st.button('Capture Image')
 
+# If the button is clicked, capture and display the image
 if capture_button:
-    # Access the latest frame from the stream
-    frame = webrtc_streamer.video_transformer.frame
-    
-    if frame is not None:
-        img = frame.to_ndarray(format="bgr24")
+    # Access the frame from the webrtc stream
+    transformer = webrtc_streamer.video_transformer
+    if transformer and transformer.frame is not None:
+        img = transformer.frame
+        
+        # Perform face and eye detection on the captured frame
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-
+        
         # Face detection
         faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(100, 100))
         for (x, y, w, h) in faces:
@@ -66,7 +68,7 @@ if capture_button:
             for (ex, ey, ew, eh) in eyes:
                 cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
                 cv2.putText(roi_color, "Eye", (ex, ey - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-
+        
         # Show captured image with detection
         st.image(img, channels='BGR', caption='Captured Image with Face and Eye Detection')
     else:
