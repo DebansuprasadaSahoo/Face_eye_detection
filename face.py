@@ -13,8 +13,14 @@ eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.
 
 # Class for video stream processing
 class FaceEyeDetection(VideoTransformerBase):
+    def __init__(self):
+        self.frame = None
+    
     def transform(self, frame):
-        img = frame.to_ndarray(format="bgr24")
+        # Save the current frame for later use
+        self.frame = frame.to_ndarray(format="bgr24")
+        
+        img = self.frame
         gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
         # Face detection
@@ -37,9 +43,11 @@ class FaceEyeDetection(VideoTransformerBase):
 webrtc_streamer(key="face-eye-detection", video_transformer_factory=FaceEyeDetection)
 
 # Button to capture image
-if st.button('Capture Image'):
-    # Capture the current frame
-    frame = webrtc_streamer.video_transformer.get_frame()
+capture_button = st.button('Capture Image')
+
+if capture_button:
+    # Access the latest frame from the stream
+    frame = webrtc_streamer.video_transformer.frame
     
     if frame is not None:
         img = frame.to_ndarray(format="bgr24")
