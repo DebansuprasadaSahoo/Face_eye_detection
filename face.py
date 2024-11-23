@@ -11,7 +11,7 @@ st.title("Real-Time Face and Eye Detection")
 st.markdown("Click the 'Capture Image' button to capture a photo and detect faces and eyes!")
 
 # Streamlit camera feed
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # Placeholder for showing webcam feed continuously
 frame_placeholder = st.empty()
