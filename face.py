@@ -1,74 +1,50 @@
 import cv2
 import streamlit as st
-from streamlit_webrtc import VideoTransformerBase, webrtc_streamer
 import numpy as np
 
-# Title and description
-st.title("Real-Time Face and Eye Detection")
-st.markdown("This application detects faces and eyes in real-time using your webcam.")
-
 # Load Haar cascades
-face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_frontalface_default.xml")
-eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + "haarcascade_eye.xml")
+face_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
+eye_classifier = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_eye.xml')
 
-# Class for video stream processing
-class FaceEyeDetection(VideoTransformerBase):
-    def __init__(self):
-        self.frame = None  # Store the current frame
-    
-    def transform(self, frame):
-        # Store the current frame
-        self.frame = frame.to_ndarray(format="bgr24")
-        
-        img = self.frame
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+# Streamlit app title
+st.title('Real-Time Face and Eye Detection')
 
-        # Face detection
-        faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(100, 100))
-        for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            cv2.putText(img, "Face", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+# Initialize webcam
+cap = cv2.VideoCapture(0)
 
-            # Detect eyes within face ROI
-            roi_gray = gray[y:y + h, x:x + w]
-            roi_color = img[y:y + h, x:x + w]
-            eyes = eye_classifier.detectMultiScale(roi_gray, scaleFactor=1.1, minNeighbors=10, minSize=(30, 30))
-            for (ex, ey, ew, eh) in eyes:
-                cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
-                cv2.putText(roi_color, "Eye", (ex, ey - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
+# Function to detect faces and eyes in a given image
+def detect_faces_and_eyes(img):
+    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
 
-        return img
+    faces = face_classifier.detectMultiScale(gray, 1.1, 4)
+    for (x, y, w, h) in faces:
+        cv2.rectangle(img, (x, y), (x+w, y+h), (255, 0, 0), 2)
+        roi_gray = gray[y:y+h, x:x+w]
+        roi_color = img[y:y+h, x:x+w]
+        eyes = eye_classifier.detectMultiScale(roi_gray)
+        for (ex, ey, ew, eh) in eyes:
+            cv2.rectangle(roi_color, (ex, ey), (ex+ew, ey+eh), (0, 255, 0), 2)
 
-# Stream webcam feed with detection
-webrtc_streamer(key="face-eye-detection", video_transformer_factory=FaceEyeDetection)
-
-# Button to capture image
+# Streamlit UI
+frame_placeholder = st.empty()
 capture_button = st.button('Capture Image')
 
-# If the button is clicked, capture and display the image
-if capture_button:
-    transformer = webrtc_streamer.video_transformer
-    if transformer and transformer.frame is not None:
-        img = transformer.frame
-        
-        # Perform face and eye detection on the captured frame
-        gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-        
-        # Face detection
-        faces = face_classifier.detectMultiScale(gray, scaleFactor=1.1, minNeighbors=5, minSize=(100, 100))
-        for (x, y, w, h) in faces:
-            cv2.rectangle(img, (x, y), (x + w, y + h), (255, 0, 0), 2)
-            cv2.putText(img, "Face", (x, y - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.7, (255, 0, 0), 2)
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
 
-            # Detect eyes within face ROI
-            roi_gray = gray[y:y + h, x:x + w]
-            roi_color = img[y:y + h, x:x + w]
-            eyes = eye_classifier.detectMultiScale(roi_gray, scaleFactor=1.1, minNeighbors=10, minSize=(30, 30))
-            for (ex, ey, ew, eh) in eyes:
-                cv2.rectangle(roi_color, (ex, ey), (ex + ew, ey + eh), (0, 255, 0), 2)
-                cv2.putText(roi_color, "Eye", (ex, ey - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 2)
-        
-        # Show captured image with detection
-        st.image(img, channels='BGR', caption='Captured Image with Face and Eye Detection')
-    else:
-        st.error("Failed to capture image.")
+    # Detect faces and eyes
+    detect_faces_and_eyes(frame)
+
+    # Display the frame
+    frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    frame_placeholder.image(frame_rgb, channels='RGB')
+
+    if capture_button:
+        # Capture the current frame and display it
+        st.image(frame_rgb, channels='RGB')
+        break
+
+# Release the camera
+cap.release()
