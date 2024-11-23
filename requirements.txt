@@ -1,4 +1,1 @@
-streamlit
-opencv
-numpy
-pandas
+
